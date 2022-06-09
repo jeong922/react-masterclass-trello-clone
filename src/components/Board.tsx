@@ -1,18 +1,20 @@
-import { useForm } from "react-hook-form";
-import { Droppable } from "react-beautiful-dnd";
-import styled from "styled-components";
-import DragabbleCard from "./DragabbleCard";
-import { ITodo, toDoState } from "../atoms";
-import { useSetRecoilState } from "recoil";
+import { useForm } from 'react-hook-form';
+import { Droppable } from 'react-beautiful-dnd';
+import styled from 'styled-components';
+import DragabbleCard from './DraggableCard';
+import { ITodo, toDoState } from '../atoms';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { useEffect } from 'react';
 
 const Wrapper = styled.div`
   width: 300px;
-  padding-top: 10px;
+  padding: 10px 20px;
   background-color: ${(props) => props.theme.boardColor};
   border-radius: 5px;
   min-height: 300px;
   display: flex;
   flex-direction: column;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
 `;
 
 const Title = styled.h2`
@@ -30,19 +32,34 @@ interface IAreaProps {
 const Area = styled.div<IAreaProps>`
   background-color: ${(props) =>
     props.isDraggingOver
-      ? "#DEDEFF"
+      ? '#DEDEFF'
       : props.isDraggingFromThis
-      ? "#898AB8"
-      : "transparent"};
+      ? '#898AB8'
+      : 'transparent'};
   flex-grow: 1;
   transition: background-color 0.3s ease-in-out;
-  padding: 20px;
+  margin: 10px 0;
+  border-radius: 5px;
 `;
 
 const Form = styled.form`
   width: 100%;
+  display: flex;
+  justify-content: center;
   input {
     width: 100%;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+  }
+  button {
+    background-color: #464555;
+    color: white;
+    border: none;
+    padding: 6px;
+    border-radius: 5px;
+    margin-left: 10px;
+    cursor: pointer;
   }
 `;
 
@@ -57,6 +74,7 @@ interface IForm {
 
 function Board({ toDos, boardId }: IBoardProps) {
   const setTodos = useSetRecoilState(toDoState);
+  const saveToDo = useRecoilValue(toDoState);
   const { register, setValue, handleSubmit } = useForm();
   const onValid = ({ toDo }: IForm) => {
     const newToDo = {
@@ -69,25 +87,31 @@ function Board({ toDos, boardId }: IBoardProps) {
         [boardId]: [...allBoards[boardId], newToDo],
       };
     });
-    setValue("todo", "");
+    setValue('toDo', '');
   };
+
+  useEffect(() => {
+    localStorage.setItem('board', JSON.stringify(saveToDo));
+  }, [saveToDo]);
+
   return (
     <Wrapper>
       <Title>{boardId}</Title>
       <Form onSubmit={handleSubmit(onValid)}>
         <input
-          {...register("toDo", { required: true })}
+          {...register('toDo', { required: true })}
           type="text"
           placeholder={`Add task on ${boardId}`}
         />
+        <button>Add</button>
       </Form>
       <Droppable droppableId={boardId}>
-        {(magic, info) => (
+        {(provided, info) => (
           <Area
             isDraggingOver={info.isDraggingOver}
             isDraggingFromThis={Boolean(info.draggingFromThisWith)}
-            ref={magic.innerRef}
-            {...magic.droppableProps}
+            ref={provided.innerRef}
+            {...provided.droppableProps}
           >
             {toDos.map((toDo, index) => (
               <DragabbleCard
@@ -97,7 +121,7 @@ function Board({ toDos, boardId }: IBoardProps) {
                 toDoText={toDo.text}
               />
             ))}
-            {magic.placeholder}
+            {provided.placeholder}
           </Area>
         )}
       </Droppable>

@@ -1,19 +1,22 @@
-import { atom, selector } from "recoil";
+import { atom, selector } from 'recoil';
 
 export interface ITodo {
   id: number;
   text: string;
 }
-
-interface IToDoSate {
+interface IToDoState {
   [key: string]: ITodo[];
 }
 
-export const toDoState = atom<IToDoSate>({
-  key: "todo",
-  default: {
-    "To Do": [],
-    Doing: [],
-    Done: [],
-  },
+const getSaveToDos = localStorage.getItem('board');
+const parseToDo = JSON.parse(getSaveToDos as any);
+
+export const toDoState = atom<IToDoState>({
+  key: 'todo',
+  default: parseToDo !== null ? parseToDo : {},
+  // default: {
+  //   "To Do": [],
+  //   Doing: [],
+  //   Done: [],
+  // },
 });
